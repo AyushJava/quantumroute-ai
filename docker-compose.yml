@@ -1,0 +1,57 @@
+services:
+
+  # PostgreSQL with PostGIS
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: quantumroute-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: quantumroute
+      POSTGRES_USER: quantumroute
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quantumroute_local_only}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quantumroute -d quantumroute"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI optimizer
+  optimizer:
+    build:
+      context: ./optimizer
+      dockerfile: Dockerfile
+    container_name: quantumroute-optimizer
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+
+  # Spring Boot backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: quantumroute-backend
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+
+  # React frontend with Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: quantumroute-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
