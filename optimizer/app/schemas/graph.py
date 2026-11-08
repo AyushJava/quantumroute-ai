@@ -7,6 +7,9 @@ A graph payload describes a weighted road network as G = (V, E):
   WGS84).
 - ``edges``: directed road segments. Each edge has ``source`` and ``target``
   node IDs plus a single non-negative scalar ``cost`` used for routing.
+  ``cost`` may be omitted when the Phase 2 cost model will compute it from
+  ``length_m``/``speed_kmh``/``congestion`` attributes; routing algorithms
+  still require a finite non-negative ``cost`` on the graph they receive.
 - ``directed``: when true the graph is treated as a ``networkx.DiGraph``;
   when false as an undirected ``networkx.Graph`` (each edge still lists a
   canonical ``source``/``target`` orientation for reporting).
@@ -23,7 +26,9 @@ Validation rules (enforced by ``GraphPayload``)
 ----------------------------------------------
 - Node IDs must be unique and non-empty.
 - Every edge ``source``/``target`` must reference a declared node.
-- ``cost`` must be finite and >= 0 (algorithms require non-negative weights).
+- ``cost`` must be finite and >= 0 when present (algorithms require
+  non-negative weights). It may be ``null``/omitted for Phase 2 cost-model
+  graphs.
 - Self-loops (source == target) are rejected.
 - Parallel edges between the same ordered node pair are rejected in v1; see
   ``GRAPH_SCHEMA.md`` for the rationale and the Phase 2 revisit condition.
@@ -61,13 +66,18 @@ class Edge(BaseModel):
 
     source: str = Field(min_length=1)
     target: str = Field(min_length=1)
-    cost: float = Field(ge=0.0, description="Non-negative scalar routing cost")
+    cost: float | None = Field(
+        default=None,
+        ge=0.0,
+        description="Non-negative scalar routing cost; optional when the "
+        "Phase 2 cost model computes it from length_m/speed_kmh/congestion",
+    )
     closed: bool = Field(default=False, description="If true, edge is unavailable for routing")
 
     @field_validator("cost")
     @classmethod
-    def _cost_must_be_finite(cls, v: float) -> float:
-        if not math.isfinite(v):
+    def _cost_must_be_finite(cls, v: float | None) -> float | None:
+        if v is not None and not math.isfinite(v):
             raise ValueError("edge cost must be finite")
         return v
 
@@ -114,5 +124,13 @@ class GraphPayload(BaseModel):
         return self
 
     def edge_attributes(self, edge: Edge) -> dict[str, Any]:
-        """Return edge attributes (minus source/target) for graph storage."""
-        return {k: v for k, v in edge.model_dump().items() if k not in {"source", "target"}}
+        """Return edge attributes (minus source/target) for graph storage.
+
+        ``None`` values (e.g. an omitted ``cost``) are dropped so the graph
+        edge simply lacks the attribute.
+        """
+        return {
+            k: v
+            for k, v in edge.model_dump().items()
+            if k not in {"source", "target"} and v is not None
+        }
