@@ -291,3 +291,53 @@ def test_evaluate_path_rejects_nonexistent_edge():
     snap = build_cost_snapshot(demo_graph())
     with pytest.raises(ValueError, match="non-existent edge"):
         evaluate_path(snap, ["A", "D"])  # no direct A->D edge
+
+
+def test_evaluate_path_rejects_nonexistent_node():
+    snap = build_cost_snapshot(demo_graph())
+    with pytest.raises(ValueError, match="not in the graph"):
+        evaluate_path(snap, ["A", "Z", "D"])
+    # single-node path with a nonexistent node is also rejected
+    with pytest.raises(ValueError, match="not in the graph"):
+        evaluate_path(snap, ["Z"])
+
+
+# --- End-to-end Phase 2 workflow -------------------------------------------
+
+
+def test_end_to_end_payload_snapshot_dijkstra():
+    """GraphPayload without cost -> loader -> snapshot -> Dijkstra."""
+    payload = GraphPayload.model_validate(
+        {
+            "name": "e2e",
+            "directed": True,
+            "nodes": [{"id": n} for n in "ABCD"],
+            "edges": [
+                {"source": "A", "target": "B", "length_m": 100.0, "speed_kmh": 36.0},
+                {"source": "A", "target": "C", "length_m": 200.0, "speed_kmh": 36.0},
+                {"source": "B", "target": "D", "length_m": 100.0, "speed_kmh": 36.0},
+                {
+                    "source": "C",
+                    "target": "D",
+                    "length_m": 100.0,
+                    "speed_kmh": 36.0,
+                    "congestion": 1.0,
+                },
+            ],
+        }
+    )
+    # cost is optional in the payload and absent on the loaded graph
+    g = build_graph(payload)
+    assert all("cost" not in d for _, _, d in g.edges(data=True))
+
+    snap = build_cost_snapshot(g)
+    r = find_shortest_path(snap, "A", "D")
+
+    assert r.found
+    assert r.path == ["A", "B", "D"]
+    assert r.total_cost == pytest.approx(0.0)
+
+    m = evaluate_path(snap, r.path)
+    assert m.distance_m == pytest.approx(200.0)
+    assert m.time_s == pytest.approx(20.0)
+    assert m.objective_value == pytest.approx(r.total_cost)

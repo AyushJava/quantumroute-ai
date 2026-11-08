@@ -212,9 +212,14 @@ def evaluate_path(graph: nx.Graph, path: Sequence[str]) -> RouteMetrics:
     ``graph`` must be produced by ``build_cost_snapshot``. ``objective_value``
     is the sum of snapshot edge ``cost`` values (``Z(P)``); ``distance_m``,
     ``time_s`` and ``congestion`` are sums of the raw edge components.
-    A single-node path yields all-zero metrics.
+    A single-node path yields all-zero metrics. Every node in ``path`` must
+    exist in ``graph``.
     """
     _weights, _ranges = _snapshot_params(graph)
+
+    for node in path:
+        if node not in graph:
+            raise ValueError(f"path node {node!r} is not in the graph")
 
     distance_m = time_s = congestion = objective_value = 0.0
     for u, v in zip(path, path[1:]):
