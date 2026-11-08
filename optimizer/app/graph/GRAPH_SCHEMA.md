@@ -49,7 +49,7 @@ Phase 4).
 |----------|---------|----------|--------------------------------------------------------------------------|
 | `source` | string  | yes      | ID of the edge's start node; must be a declared node.                    |
 | `target` | string  | yes      | ID of the edge's end node; must be a declared node.                      |
-| `cost`   | number  | yes      | Non-negative, finite scalar routing cost (see Units).                    |
+| `cost`   | number  | no       | Non-negative, finite scalar routing cost; may be omitted/null when the Phase 2 cost model computes it from `length_m`/`speed_kmh`/`congestion`. Algorithms still require a finite `cost` on the graph they receive. |
 | `closed` | boolean | no       | If `true`, the edge is retained for reporting but excluded from routing. Defaults to `false`. |
 
 ### Extensibility for Phase 2
