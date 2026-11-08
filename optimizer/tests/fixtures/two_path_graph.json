@@ -1,0 +1,17 @@
+{
+  "name": "two-path-demo",
+  "directed": true,
+  "nodes": [
+    { "id": "A", "lat": 28.6139, "lon": 77.2090 },
+    { "id": "B" },
+    { "id": "C" },
+    { "id": "D", "lat": 28.7041, "lon": 77.1025 }
+  ],
+  "edges": [
+    { "source": "A", "target": "B", "cost": 1.0 },
+    { "source": "B", "target": "D", "cost": 1.0 },
+    { "source": "A", "target": "C", "cost": 1.0 },
+    { "source": "C", "target": "D", "cost": 5.0 },
+    { "source": "B", "target": "C", "cost": 0.5, "closed": true }
+  ]
+}
