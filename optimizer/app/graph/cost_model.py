@@ -78,6 +78,10 @@ class RouteMetrics:
 
 
 def _check_finite(name: str, value: float) -> float:
+    # bool is a subclass of int in Python; reject it explicitly so True/False
+    # are never accepted as distances, speeds or congestion values.
+    if isinstance(value, bool):
+        raise ValueError(f"{name} must be a finite number, got boolean {value!r}")
     if not isinstance(value, (int, float)) or not math.isfinite(value):
         raise ValueError(f"{name} must be a finite number, got {value!r}")
     return float(value)
@@ -95,7 +99,13 @@ def travel_time_seconds(length_m: float, speed_kmh: float) -> float:
         raise ValueError(f"length_m must be >= 0, got {d}")
     if v <= 0:
         raise ValueError(f"speed_kmh must be > 0, got {v}")
-    return d / (v * _MPS_PER_KMH)
+    result = d / (v * _MPS_PER_KMH)
+    if not math.isfinite(result):
+        raise ValueError(
+            f"travel time computation overflowed to a non-finite value "
+            f"(length_m={d}, speed_kmh={v})"
+        )
+    return result
 
 
 def edge_components(attrs: Mapping[str, object]) -> EdgeComponents:
@@ -157,11 +167,14 @@ def _edge_cost(components: EdgeComponents, ranges: dict[str, tuple[float, float]
     t_lo, t_hi = ranges["time_s"]
     d_lo, d_hi = ranges["distance_m"]
     c_lo, c_hi = ranges["congestion"]
-    return (
+    cost = (
         weights.alpha * _norm(components.time_s, t_lo, t_hi)
         + weights.beta * _norm(components.distance_m, d_lo, d_hi)
         + weights.gamma * _norm(components.congestion, c_lo, c_hi)
     )
+    if not math.isfinite(cost):
+        raise ValueError(f"computed edge cost is non-finite: {cost!r}")
+    return cost
 
 
 def build_cost_snapshot(
@@ -213,9 +226,17 @@ def evaluate_path(graph: nx.Graph, path: Sequence[str]) -> RouteMetrics:
     is the sum of snapshot edge ``cost`` values (``Z(P)``); ``distance_m``,
     ``time_s`` and ``congestion`` are sums of the raw edge components.
     A single-node path yields all-zero metrics. Every node in ``path`` must
-    exist in ``graph``.
+    exist in ``graph``; an empty path raises ``ValueError``.
+
+    This function only aggregates metrics for the supplied path — it does
+    NOT independently enforce routing constraints. A manually supplied path
+    containing a ``closed`` edge can still be evaluated; Dijkstra and A*
+    remain responsible for excluding closed edges during route finding.
     """
     _weights, _ranges = _snapshot_params(graph)
+
+    if len(path) == 0:
+        raise ValueError("path must contain at least one node")
 
     for node in path:
         if node not in graph:

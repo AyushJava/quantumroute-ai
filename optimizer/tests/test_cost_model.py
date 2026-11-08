@@ -341,3 +341,68 @@ def test_end_to_end_payload_snapshot_dijkstra():
     assert m.distance_m == pytest.approx(200.0)
     assert m.time_s == pytest.approx(20.0)
     assert m.objective_value == pytest.approx(r.total_cost)
+
+
+# --- Review hardening: bools, empty paths, finite results -------------------
+
+
+@pytest.mark.parametrize("bad", [True, False])
+def test_travel_time_rejects_boolean_inputs(bad):
+    with pytest.raises(ValueError, match="boolean"):
+        travel_time_seconds(100.0, bad)
+    with pytest.raises(ValueError, match="boolean"):
+        travel_time_seconds(bad, 36.0)
+
+
+def test_edge_components_rejects_boolean_values():
+    with pytest.raises(ValueError, match="boolean"):
+        edge_components({"length_m": True, "speed_kmh": 36.0})
+    with pytest.raises(ValueError, match="boolean"):
+        edge_components({"length_m": 100.0, "speed_kmh": False})
+    with pytest.raises(ValueError, match="boolean"):
+        edge_components({"length_m": 100.0, "speed_kmh": 36.0, "congestion": True})
+
+
+def test_evaluate_path_rejects_empty_path():
+    snap = build_cost_snapshot(demo_graph())
+    with pytest.raises(ValueError, match="at least one node"):
+        evaluate_path(snap, [])
+
+
+def test_evaluate_path_valid_single_node_still_zeros():
+    snap = build_cost_snapshot(demo_graph())
+    m = evaluate_path(snap, ["B"])
+    assert m.distance_m == 0.0
+    assert m.time_s == 0.0
+    assert m.congestion == 0.0
+    assert m.objective_value == 0.0
+
+
+def test_travel_time_rejects_overflow_to_infinity():
+    # valid (non-restrictive) inputs whose quotient overflows to inf
+    with pytest.raises(ValueError, match="non-finite"):
+        travel_time_seconds(1e308, 1e-300)
+
+
+def test_edge_cost_rejects_non_finite_result():
+    # finite weights and components, but the weighted sum overflows
+    g = demo_graph()
+    huge = ObjectiveWeights(alpha=1e308, beta=1e308, gamma=1e308)
+    with pytest.raises(ValueError, match="non-finite"):
+        build_cost_snapshot(g, huge)
+
+
+def test_evaluate_path_closed_edge_metrics_explicit():
+    # evaluate_path aggregates metrics for ANY supplied path; it does not
+    # enforce routing constraints. A path through a closed edge is still
+    # evaluated (Dijkstra/A* are what exclude closed edges).
+    g = make_graph(
+        [
+            {"source": "A", "target": "B", "length_m": 100.0, "speed_kmh": 36.0,
+             "closed": True},
+        ]
+    )
+    snap = build_cost_snapshot(g)
+    m = evaluate_path(snap, ["A", "B"])
+    assert m.distance_m == pytest.approx(100.0)
+    assert m.time_s == pytest.approx(10.0)
