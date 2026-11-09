@@ -265,9 +265,59 @@ The planned system will incorporate:
 
 ## 🚀 Project Status
 
-<em>Currently in development – Phase 0: Foundation and Project Setup.</em>
+<em>Currently in development – Phase 4: Backend Integration.</em>
 
-The architecture, repository structure, and development roadmap are being established before implementation begins.
+The optimizer (FastAPI), Spring Boot backend, and persistence layer are implemented through Phase 4e. The React frontend is planned for a later phase.
+
+## 🏃 Running the Stack
+
+### Prerequisites
+
+- Docker + Docker Compose
+- `JWT_SECRET` environment variable (required, minimum 32 bytes — generate with `openssl rand -hex 32`)
+
+### Setup
+
+```bash
+cp .env.example .env   # then set JWT_SECRET (and optionally POSTGRES_PASSWORD)
+```
+
+`.env` is git-ignored — never commit real secrets.
+
+### Start
+
+```bash
+docker compose up -d --build
+```
+
+Services:
+
+| Service    | URL / port              | Notes                              |
+|------------|-------------------------|------------------------------------|
+| db         | `127.0.0.1:15432`       | PostgreSQL 16 + PostGIS            |
+| optimizer  | `http://localhost:8000` | `GET /api/health`, `POST /api/v1/optimize` |
+| backend    | `http://localhost:8081` | REST API under `/api/v1`           |
+| frontend   | `http://localhost:5173` | Nginx-served React app (planned)   |
+
+The backend waits for the database health check and the optimizer to start before launching.
+
+### Smoke test
+
+With the stack running:
+
+```bash
+./scripts/smoke-e2e.sh
+```
+
+Exercises register → login → workspace → scenario → DIJKSTRA job → result end-to-end (requires `curl` and `python3`).
+
+### Stop (keep data)
+
+```bash
+docker compose stop        # or: docker compose down   (volumes are preserved)
+```
+
+The `pgdata` volume is **not** removed by `docker compose down` — database data persists. Only `docker compose down -v` deletes it.
 
 ## 🔮 Future Enhancements
 
