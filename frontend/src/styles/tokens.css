@@ -1,0 +1,77 @@
+/* QuantumRoute AI design tokens */
+
+:root {
+  /* accent — restrained indigo/blue for AI + geospatial */
+  --accent: #4f6ef7;
+  --accent-hover: #3f5ce0;
+  --accent-soft: rgba(79, 110, 247, 0.12);
+  --accent-contrast: #ffffff;
+
+  /* traffic accents (Waze-inspired, used sparingly) */
+  --traffic-free: #2fbf71;
+  --traffic-slow: #f5a623;
+  --traffic-heavy: #e5484d;
+
+  --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
+
+  --sidebar-width: 248px;
+  --topbar-height: 60px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.14);
+
+  --focus-ring: 0 0 0 3px var(--accent-soft);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f4f6fb;
+  --bg-elevated: #ffffff;
+  --bg-subtle: #eef1f8;
+  --bg-hover: #e7ebf5;
+  --text: #1a2233;
+  --text-secondary: #5a6478;
+  --text-muted: #8a93a6;
+  --border: #e2e7f0;
+  --border-strong: #cfd6e4;
+  --sidebar-bg: #ffffff;
+  --topbar-bg: rgba(255, 255, 255, 0.85);
+  --card-bg: #ffffff;
+  --map-bg: #e8edf5;
+  --success: #1e9e5a;
+  --danger: #d64545;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0e1420;
+  --bg-elevated: #151c2b;
+  --bg-subtle: #1b2334;
+  --bg-hover: #232c42;
+  --text: #e8ecf5;
+  --text-secondary: #a4adbf;
+  --text-muted: #6b7488;
+  --border: #26304a;
+  --border-strong: #35415f;
+  --sidebar-bg: #121826;
+  --topbar-bg: rgba(18, 24, 38, 0.85);
+  --card-bg: #151c2b;
+  --map-bg: #1a2233;
+  --success: #34c98e;
+  --danger: #f06868;
+}
