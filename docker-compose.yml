@@ -36,8 +36,22 @@ services:
       dockerfile: Dockerfile
     container_name: quantumroute-backend
     restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/quantumroute
+      SPRING_DATASOURCE_USERNAME: quantumroute
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-quantumroute_local_only}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - see .env.example}
+      APP_OPTIMIZER_BASE_URL: http://optimizer:8000
+      APP_OPTIMIZER_CONNECT_TIMEOUT_MS: ${OPTIMIZER_CONNECT_TIMEOUT_MS:-3000}
+      APP_OPTIMIZER_READ_TIMEOUT_MS: ${OPTIMIZER_READ_TIMEOUT_MS:-60000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
     ports:
       - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+      optimizer:
+        condition: service_started
 
   # React frontend with Nginx
   frontend:

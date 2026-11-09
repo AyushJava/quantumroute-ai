@@ -36,3 +36,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
+
+# Python virtual environments
+.venv*/
