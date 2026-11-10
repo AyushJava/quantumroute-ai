@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, MapPin } from 'lucide-react'
 import { register } from '../api/auth'
@@ -43,6 +43,11 @@ export function RegisterPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (redirectTimer.current) clearTimeout(redirectTimer.current)
+  }, [])
 
   function validate(): boolean {
     const next: FieldErrors = {}
@@ -72,7 +77,10 @@ export function RegisterPage() {
         displayName: displayName.trim() || undefined,
       })
       setSuccess(true)
-      setTimeout(() => navigate('/login', { replace: true }), 1200)
+      redirectTimer.current = setTimeout(
+        () => navigate('/login', { replace: true }),
+        1200,
+      )
     } catch (err) {
       setFormError(friendlyMessage(err))
     } finally {

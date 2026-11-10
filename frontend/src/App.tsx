@@ -18,8 +18,9 @@ import { RegisterPage } from './pages/RegisterPage'
 import { WorkspacesPage } from './pages/WorkspacesPage'
 import { WorkspaceDetailPage } from './pages/WorkspaceDetailPage'
 import { ScenarioDetailPage } from './pages/ScenarioDetailPage'
+import { RoutePlannerPage } from './pages/RoutePlannerPage'
 import {
-  RoutePlannerPage,
+  RoutePlannerPage as RoutePlannerPlaceholder,
   ExperimentsPage,
 } from './pages/Placeholders'
 
@@ -56,7 +57,8 @@ function ProtectedApp() {
         <Route path="/workspaces" element={<WorkspacesPage />} />
         <Route path="/workspaces/:workspaceId" element={<WorkspaceDetailPage />} />
         <Route path="/scenarios/:scenarioId" element={<ScenarioDetailPage />} />
-        <Route path="/planner" element={<RoutePlannerPage />} />
+        <Route path="/scenarios/:scenarioId/plan" element={<RoutePlannerPage />} />
+        <Route path="/planner" element={<RoutePlannerPlaceholder />} />
         <Route path="/experiments" element={<ExperimentsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
