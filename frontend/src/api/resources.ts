@@ -1,5 +1,8 @@
 import { apiRequest } from './client'
 import type {
+  JobResponse,
+  JobResultResponse,
+  JobSubmitRequest,
   Page,
   ScenarioDetail,
   ScenarioSummary,
@@ -87,4 +90,26 @@ export function deleteScenario(id: string, token: string | null) {
     method: 'DELETE',
     token,
   })
+}
+
+/* ---- Phase 5.5: optimization jobs ---- */
+
+export function submitJob(
+  scenarioId: string,
+  body: JobSubmitRequest,
+  token: string | null,
+) {
+  return apiRequest<JobResponse>(`/api/v1/scenarios/${scenarioId}/jobs`, {
+    method: 'POST',
+    body,
+    token,
+  })
+}
+
+export function getJob(jobId: string, token: string | null) {
+  return apiRequest<JobResponse>(`/api/v1/jobs/${jobId}`, { token })
+}
+
+export function getJobResult(jobId: string, token: string | null) {
+  return apiRequest<JobResultResponse>(`/api/v1/jobs/${jobId}/result`, { token })
 }

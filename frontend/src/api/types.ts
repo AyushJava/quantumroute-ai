@@ -85,3 +85,61 @@ export interface ScenarioUpsertRequest {
   graph?: ScenarioGraph
   config?: Record<string, unknown>
 }
+
+/* ---- Phase 5.5: optimization jobs ---- */
+
+export type JobStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'TIMEOUT'
+export type JobAlgorithm = 'DIJKSTRA' | 'ASTAR' | 'QPSO'
+
+export interface JobSubmitRequest {
+  algorithm: JobAlgorithm
+  sourceNodeId: string
+  targetNodeId: string
+  objectiveWeights?: { alpha: number; beta: number; gamma: number }
+  parameters?: Record<string, unknown>
+}
+
+export interface JobResponse {
+  id: string
+  scenarioId: string
+  status: JobStatus
+  algorithm: JobAlgorithm
+  createdAt: string
+  finishedAt: string | null
+  errorMessage: string | null
+}
+
+/** RouteOut from the optimizer: {nodeIds, edgeIds, geometry?}.
+ *  Empty object {} for infeasible results. */
+export interface JobRoute {
+  nodeIds?: string[]
+  edgeIds?: string[]
+  /** GeoJSON geometry; coordinates are [lon, lat]. */
+  geometry?: Record<string, unknown> | null
+}
+
+export interface JobMetrics {
+  distanceMeters: number | null
+  estimatedTravelTimeSeconds: number | null
+  congestionPenalty: number | null
+  objectiveValue: number | null
+}
+
+export interface QpsoAlgorithmMetadata {
+  seed?: number
+  iterationsRun?: number
+  usedRepair?: boolean
+  repairRate?: number
+  feasibilityRate?: number
+  convergenceTrace?: number[]
+  parameters?: Record<string, unknown>
+}
+
+export interface JobResultResponse {
+  jobId: string
+  feasible: boolean
+  route: JobRoute
+  metrics: JobMetrics | null
+  runtimeMs: number | null
+  algorithmMetadata: QpsoAlgorithmMetadata | null
+}

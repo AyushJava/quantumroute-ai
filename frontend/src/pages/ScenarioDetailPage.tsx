@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, Save, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Navigation, Pencil, Save, Trash2, X } from 'lucide-react'
 import { useAuth } from '../auth/useAuth'
 import { deleteScenario, getScenario, updateScenario } from '../api/resources'
 import { friendlyApiMessage } from '../api/errors'
@@ -298,6 +298,12 @@ export function ScenarioDetailPage() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate(`/scenarios/${scenario.id}/plan`)}
+              >
+                <Navigation size={15} /> Plan Route
+              </button>
               <button className="btn btn-secondary" onClick={startEdit}>
                 <Pencil size={15} /> Edit
               </button>
